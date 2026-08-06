@@ -173,8 +173,8 @@ const About = () => {
               <Award className="h-8 w-8" />
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-              Mulai Perjalanan<br />
-              <span className="text-gold">Belajar Anda</span>
+              Yuk Mulai<br />
+              <span className="text-gold">Perjalanan Literasimu</span>
             </h2>
             <p className="text-lg text-primary-foreground/80 leading-relaxed mb-10 max-w-2xl mx-auto">
               Jelajahi berbagai produk dan program kami untuk mengembangkan 
@@ -182,9 +182,9 @@ const About = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild variant="gold" size="lg">
-                <a href="/product">
+                <a href="/articles">
                   <BookOpen className="h-5 w-5 mr-2" />
-                  Lihat Produk
+                  Lihat Artikel
                 </a>
               </Button>
               <Button asChild variant="ghost" size="lg" className="text-primary-foreground hover:bg-white/10 hover:text-primary-foreground border border-white/20">

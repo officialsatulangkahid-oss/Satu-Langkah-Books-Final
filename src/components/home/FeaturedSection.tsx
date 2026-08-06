@@ -33,7 +33,7 @@ const FeaturedSection = () => {
               Eksplorasi
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-heading mt-3 leading-tight">
-              Mulai Perjalanan<br />Belajar Anda
+              Yuk Mulai<br />Perjalanan Literasimu
             </h2>
           </div>
           <p className="text-muted-foreground text-sm max-w-sm leading-relaxed lg:text-right">

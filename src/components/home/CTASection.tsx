@@ -8,8 +8,8 @@ const CTASection = () => {
       <div className="container-page">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-white">
-            Bersama Membangun{" "}
-            <span className="font-serif italic font-normal">Generasi Berilmu</span>
+            Deeper Knowledge,{" "}
+            <span className="font-serif italic font-normal">Higher Adab</span>
           </h2>
           <p className="text-primary-foreground/70 text-lg leading-relaxed mb-10 max-w-xl mx-auto">
             Dapatkan akses ke e-book berkualitas, e-course praktis, dan berbagai 
