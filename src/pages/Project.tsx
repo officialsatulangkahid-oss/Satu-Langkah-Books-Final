@@ -3,7 +3,7 @@ import { Book, Wrench, Users, GraduationCap, ArrowRight } from "lucide-react";
 const projects = [
   {
     id: "ebook-tauhid",
-    title: "E-Book Seri Tauhid",
+    title: "E-Book",
     description: "Koleksi e-book tentang tauhid yang disusun secara sistematis dan mudah dipahami.",
     icon: Book,
     status: "ongoing" as const,
