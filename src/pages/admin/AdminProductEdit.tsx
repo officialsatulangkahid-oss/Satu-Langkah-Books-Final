@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { publishContent } from "@/lib/publishContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +62,7 @@ const AdminProductEdit = () => {
       : await supabase.from("products").update(payload).eq("id", id!);
     setSaving(false);
     if (error) return toast.error(error.message);
+    await publishContent();
     toast.success(isNew ? "Produk dibuat" : "Tersimpan");
     navigate("/admin/products");
   };

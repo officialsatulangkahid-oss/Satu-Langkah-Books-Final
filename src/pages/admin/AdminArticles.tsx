@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { publishContent } from "@/lib/publishContent";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Star, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ const AdminArticles = () => {
   const togglePublished = async (id: string, current: boolean) => {
     const { error } = await supabase.from("articles").update({ published: !current }).eq("id", id);
     if (error) return toast.error(error.message);
+    await publishContent();
     toast.success(!current ? "Diterbitkan" : "Disembunyikan");
     load();
   };
@@ -44,6 +46,7 @@ const AdminArticles = () => {
     if (!confirm(`Hapus artikel "${title}"?`)) return;
     const { error } = await supabase.from("articles").delete().eq("id", id);
     if (error) return toast.error(error.message);
+    await publishContent();
     toast.success("Artikel dihapus");
     load();
   };

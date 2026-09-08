@@ -11,7 +11,7 @@ import {
   Link2,
   X,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getArticle, getArticles } from "@/lib/content";
 import { toast } from "sonner";
 import SelectionToolbar from "@/components/article/SelectionToolbar";
 import ShareQuoteDialog from "@/components/article/ShareQuoteDialog";
@@ -67,25 +67,19 @@ const ArticleDetail = () => {
     if (!id) return;
     setLoading(true);
     (async () => {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      const query = supabase
-        .from("articles")
-        .select("id, slug, title, excerpt, category, read_time, date, author, image_url, content");
-      const { data } = await (isUuid ? query.eq("id", id) : query.eq("slug", id)).maybeSingle();
-      setArticle((data as ArticleData) ?? null);
+      const data = await getArticle(id);
+      setArticle((data as unknown as ArticleData) ?? null);
       setLoading(false);
 
       if (data) {
-        const { data: rel } = await supabase
-          .from("articles")
-          .select("id, slug, title, excerpt, category, read_time")
-          .eq("published", true)
-          .neq("id", (data as ArticleData).id)
-          .limit(3);
-        setRelated((rel as RelatedRow[]) ?? []);
+        const rel = (await getArticles())
+          .filter((a) => a.id !== data.id)
+          .slice(0, 3);
+        setRelated(rel as RelatedRow[]);
       }
     })();
   }, [id]);
+
 
   useEffect(() => {
     window.scrollTo({ top: 0 });

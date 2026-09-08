@@ -2,21 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Clock, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { getArticles, type ContentArticleListItem } from "@/lib/content";
 
 const categories = ["Semua", "Tauhid", "Literasi Islam", "Pendidikan", "Refleksi"];
 
-interface ArticleRow {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  category: string | null;
-  read_time: string | null;
-  date: string | null;
-  image_url: string | null;
-  featured: boolean;
-}
+type ArticleRow = ContentArticleListItem;
 
 const Articles = () => {
   const [activeCategory, setActiveCategory] = useState("Semua");
@@ -25,15 +15,11 @@ const Articles = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("articles")
-        .select("id, slug, title, excerpt, category, read_time, date, image_url, featured")
-        .eq("published", true)
-        .order("created_at", { ascending: false });
-      setArticles((data as ArticleRow[]) || []);
+      setArticles(await getArticles());
       setLoading(false);
     })();
   }, []);
+
 
   const filteredArticles = activeCategory === "Semua"
     ? articles

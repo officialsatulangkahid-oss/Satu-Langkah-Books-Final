@@ -1,50 +1,61 @@
+import { useEffect, useState } from "react";
 import CourseCard from "@/components/courses/CourseCard";
 import { CheckCircle, Sparkles } from "lucide-react";
+import { getCourses, type ContentCourse } from "@/lib/content";
 
-const courses = [
+/** Fallback so the page never renders empty if content JSON is unavailable. */
+const FALLBACK_COURSES: ContentCourse[] = [
   {
     id: "pengantar-tauhid",
+    slug: "pengantar-tauhid",
     title: "Pengantar Ilmu Tauhid",
-    description: "Memahami dasar-dasar tauhid sebagai fondasi kehidupan seorang muslim dengan pendekatan yang sistematis.",
-    level: "Pemula" as const,
+    description:
+      "Memahami dasar-dasar tauhid sebagai fondasi kehidupan seorang muslim dengan pendekatan yang sistematis.",
+    image_url: null,
+    level: "Pemula",
     duration: "4 Jam",
     lessons: 12,
     students: 250,
-    price: "Rp 99.000",
-    priceAmount: 99000,
+    price: 99000,
   },
   {
     id: "adab-penuntut-ilmu",
+    slug: "adab-penuntut-ilmu",
     title: "Adab Penuntut Ilmu",
-    description: "Mempelajari adab-adab yang harus dimiliki seorang penuntut ilmu berdasarkan tuntunan ulama salaf.",
-    level: "Pemula" as const,
+    description:
+      "Mempelajari adab-adab yang harus dimiliki seorang penuntut ilmu berdasarkan tuntunan ulama salaf.",
+    image_url: null,
+    level: "Pemula",
     duration: "3 Jam",
     lessons: 8,
     students: 180,
-    price: "Rp 79.000",
-    priceAmount: 79000,
+    price: 79000,
   },
   {
     id: "manhaj-belajar",
+    slug: "manhaj-belajar",
     title: "Manhaj Belajar Islam",
-    description: "Panduan praktis dalam menyusun kurikulum belajar Islam mandiri yang terstruktur dan berkelanjutan.",
-    level: "Menengah" as const,
+    description:
+      "Panduan praktis dalam menyusun kurikulum belajar Islam mandiri yang terstruktur dan berkelanjutan.",
+    image_url: null,
+    level: "Menengah",
     duration: "6 Jam",
     lessons: 15,
     students: 120,
-    price: "Rp 149.000",
-    priceAmount: 149000,
+    price: 149000,
   },
   {
     id: "pendidikan-anak",
+    slug: "pendidikan-anak",
     title: "Pendidikan Anak Islami",
-    description: "Prinsip dan metode mendidik anak sesuai tuntunan Islam untuk membentuk generasi yang berakhlak mulia.",
-    level: "Menengah" as const,
+    description:
+      "Prinsip dan metode mendidik anak sesuai tuntunan Islam untuk membentuk generasi yang berakhlak mulia.",
+    image_url: null,
+    level: "Menengah",
     duration: "5 Jam",
     lessons: 10,
     students: 200,
-    price: "Rp 129.000",
-    priceAmount: 129000,
+    price: 129000,
   },
 ];
 
@@ -56,7 +67,25 @@ const benefits = [
   "Update materi secara berkala",
 ];
 
+const LEVELS = ["Pemula", "Menengah", "Lanjutan"] as const;
+type Level = (typeof LEVELS)[number];
+
+const toLevel = (value: string | null): Level =>
+  (LEVELS as readonly string[]).includes(value ?? "") ? (value as Level) : "Pemula";
+
+const formatPrice = (price: number | null) =>
+  `Rp ${new Intl.NumberFormat("id-ID").format(price ?? 0)}`;
+
 const ECourse = () => {
+  const [courses, setCourses] = useState<ContentCourse[]>(FALLBACK_COURSES);
+
+  useEffect(() => {
+    (async () => {
+      const items = await getCourses();
+      if (items.length) setCourses(items);
+    })();
+  }, []);
+
   return (
     <>
       {/* Header */}
@@ -115,7 +144,18 @@ const ECourse = () => {
                 className="animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <CourseCard {...course} />
+                <CourseCard
+                  id={course.slug}
+                  title={course.title}
+                  description={course.description ?? ""}
+                  level={toLevel(course.level)}
+                  duration={course.duration ?? "-"}
+                  lessons={course.lessons ?? 0}
+                  students={course.students ?? 0}
+                  price={formatPrice(course.price)}
+                  priceAmount={course.price ?? 0}
+                  image={course.image_url ?? undefined}
+                />
               </div>
             ))}
           </div>

@@ -1,0 +1,29 @@
+# Satu Langkah Books — Hostinger (Apache) production config
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  # SPA fallback: serve index.html for client-side routes
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Hashed build assets — immutable
+  <FilesMatch "\.(js|css|woff2|png|jpg|jpeg|webp|avif|svg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # Published static content — short CDN cache, revalidated
+  <LocationMatch "^/content/">
+    Header set Cache-Control "public, max-age=300, stale-while-revalidate=86400"
+  </LocationMatch>
+  # HTML entry point must never be cached hard
+  <FilesMatch "index\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>

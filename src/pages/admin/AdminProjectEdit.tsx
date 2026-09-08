@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { publishContent } from "@/lib/publishContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +50,7 @@ const AdminProjectEdit = () => {
       : await supabase.from("projects").update(payload).eq("id", id!);
     setSaving(false);
     if (error) return toast.error(error.message);
+    await publishContent();
     toast.success("Tersimpan");
     navigate("/admin/projects");
   };

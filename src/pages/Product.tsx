@@ -1,26 +1,56 @@
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getProducts, type ContentProductListItem } from "@/lib/content";
 import readingJournalSpecial from "@/assets/reading-journal-special.png";
 import readingJournal2026 from "@/assets/reading-journal-2026.png";
 
-const products = [
+/** Local assets keyed by slug — used when the published JSON has no image. */
+export const PRODUCT_IMAGES: Record<string, string> = {
+  "reading-journal-special": readingJournalSpecial,
+  "reading-journal-2026": readingJournal2026,
+};
+
+/** Fallback so the page never renders empty if content JSON is unavailable. */
+const FALLBACK_PRODUCTS: ContentProductListItem[] = [
   {
     id: "reading-journal-special",
+    slug: "reading-journal-special",
     title: "Reading Journal 2026 Special Edition for Sister",
-    description: "Edisi spesial Reading Journal yang dirancang khusus untuk para sister. Dilengkapi dengan layout estetik, tracker membaca, dan space refleksi.",
-    image: readingJournalSpecial,
+    short_desc:
+      "Edisi spesial Reading Journal yang dirancang khusus untuk para sister. Dilengkapi dengan layout estetik, tracker membaca, dan space refleksi.",
     category: "E-Book",
+    image_url: null,
+    price: 89000,
+    product_type: "ebook",
+    checkout_enabled: true,
+    external_link: null,
   },
   {
     id: "reading-journal-2026",
+    slug: "reading-journal-2026",
     title: "Reading Journal 2026",
-    description: "Reading Journal 2026 dengan desain minimalis dan elegan. Cocok untuk siapa saja yang ingin membangun kebiasaan membaca.",
-    image: readingJournal2026,
+    short_desc:
+      "Reading Journal 2026 dengan desain minimalis dan elegan. Cocok untuk siapa saja yang ingin membangun kebiasaan membaca.",
     category: "E-Book",
+    image_url: null,
+    price: 75000,
+    product_type: "ebook",
+    checkout_enabled: true,
+    external_link: null,
   },
 ];
 
 const Product = () => {
+  const [products, setProducts] = useState<ContentProductListItem[]>(FALLBACK_PRODUCTS);
+
+  useEffect(() => {
+    (async () => {
+      const items = await getProducts();
+      if (items.length) setProducts(items);
+    })();
+  }, []);
+
   return (
     <>
       {/* Header */}
@@ -46,14 +76,14 @@ const Product = () => {
           <div className="grid md:grid-cols-2 gap-10 lg:gap-14">
             {products.map((product, index) => (
               <Link
-                to={`/product/${product.id}`}
+                to={`/product/${product.slug}`}
                 key={product.id}
                 className="group animate-fade-in-up max-w-sm mx-auto w-full"
                 style={{ animationDelay: `${index * 80}ms` }}
               >
                 <div className="rounded-xl overflow-hidden bg-muted mb-5 border border-border/30 group-hover:border-border transition-all duration-500">
                   <img
-                    src={product.image}
+                    src={PRODUCT_IMAGES[product.slug] ?? product.image_url ?? "/placeholder.svg"}
                     alt={product.title}
                     className="w-full h-auto object-contain group-hover:scale-[1.03] transition-transform duration-700"
                     loading="lazy"
@@ -67,7 +97,7 @@ const Product = () => {
                     {product.title}
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-2">
-                    {product.description}
+                    {product.short_desc}
                   </p>
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary group-hover:gap-3 transition-all">
                     Lihat Detail

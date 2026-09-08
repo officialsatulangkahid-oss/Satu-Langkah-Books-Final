@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { publishContent } from "@/lib/publishContent";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ const AdminCourses = () => {
     if (!confirm(`Hapus kursus "${title}"?`)) return;
     const { error } = await supabase.from("courses").delete().eq("id", id);
     if (error) return toast.error(error.message);
+    await publishContent();
     toast.success("Dihapus"); load();
   };
 
