@@ -1,0 +1,11 @@
+name: Trigger Hostinger Deploy
+on:
+  repository_dispatch:
+    types: [supabase-trigger]
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger
+        run: echo "Database updated, triggering redeploy on Hostinger"
