@@ -6,7 +6,9 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
  * database into `public.content_files` so the website can read pre-rendered
  * JSON instead of querying tables on every page view.
  *
- * Called automatically by the admin panel after each save/delete.
+ * Can be triggered by:
+ * 1. Admin via Dashboard (Bearer JWT Token)
+ * 2. Supabase Database Webhook (x-webhook-secret Header)
  */
 
 const ADMIN_EMAIL = "officialsatulangkahid@gmail.com";
@@ -28,19 +30,35 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // --- authenticate: only the admin may publish -------------------------
+    // --- AUTHENTICATION CHECK ---------------------------------------------
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+    const webhookSecretHeader = req.headers.get("x-webhook-secret");
+    const expectedSecret = Deno.env.get("WEBHOOK_SECRET");
 
-    const userClient = createClient(url, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    if (!userData?.user || userData.user.email !== ADMIN_EMAIL) {
-      return json({ error: "Forbidden" }, 403);
+    // 1. Cek otentikasi via Webhook Secret Key
+    const isWebhookAuthorized = Boolean(
+      webhookSecretHeader && expectedSecret && webhookSecretHeader === expectedSecret
+    );
+
+    // 2. Cek otentikasi via Admin Login JWT
+    let isAdminAuthorized = false;
+    if (authHeader.startsWith("Bearer ")) {
+      const userClient = createClient(url, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false },
+      });
+      const { data: userData } = await userClient.auth.getUser();
+      if (userData?.user && userData.user.email === ADMIN_EMAIL) {
+        isAdminAuthorized = true;
+      }
     }
 
+    // Tolak jika kedua jalur di atas tidak valid
+    if (!isWebhookAuthorized && !isAdminAuthorized) {
+      return json({ error: "Unauthorized: Invalid Secret or Admin Token" }, 401);
+    }
+
+    // --- PUBLISH PROCESS ---------------------------------------------------
     const db = createClient(url, serviceKey, { auth: { persistSession: false } });
     const generatedAt = new Date().toISOString();
     const files: { path: string; data: unknown }[] = [];
@@ -126,7 +144,7 @@ Deno.serve(async (req) => {
     });
     add("authors.json", {
       generatedAt,
-      items: uniq(articleRows.map((a) => a.author)).map((name) => ({ name })),
+      items: uniq(articleRows.map((name) => a.author)).map((name) => ({ name })),
     });
     add("manifest.json", {
       generatedAt,
