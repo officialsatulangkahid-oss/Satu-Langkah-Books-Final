@@ -142,10 +142,13 @@ Deno.serve(async (req) => {
       articles: uniq(articleRows.map((a) => a.category)),
       products: uniq(productRows.map((p) => p.category)),
     });
+    
+    // PERBAIKAN DI SINI: ganti (name) => a.author menjadi (a) => a.author
     add("authors.json", {
       generatedAt,
-      items: uniq(articleRows.map((name) => a.author)).map((name) => ({ name })),
+      items: uniq(articleRows.map((a) => a.author)).map((name) => ({ name })),
     });
+    
     add("manifest.json", {
       generatedAt,
       counts: {
@@ -163,11 +166,13 @@ Deno.serve(async (req) => {
 
     // Remove stale entries (e.g. deleted or unpublished items).
     const keep = rows.map((r) => r.path);
-    const { error: delErr } = await db
-      .from("content_files")
-      .delete()
-      .not("path", "in", `(${keep.map((p) => `"${p}"`).join(",")})`);
-    if (delErr) throw delErr;
+    if (keep.length > 0) {
+      const { error: delErr } = await db
+        .from("content_files")
+        .delete()
+        .not("path", "in", `(${keep.map((p) => `"${p}"`).join(",")})`);
+      if (delErr) throw delErr;
+    }
 
     return json({ ok: true, generatedAt, published: rows.length });
   } catch (e) {

@@ -18,22 +18,53 @@ const AuthContext = createContext<AuthContextValue>({
   signOut: async () => {},
 });
 
-export const ADMIN_EMAIL = "officialsatulangkahid@gmail.com";
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Fungsi untuk cek apakah user terdaftar di tabel admin_users
+  const checkAdminStatus = async (currentUser: User | null) => {
+    if (!currentUser) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Gagal memeriksa status admin:", error.message);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!data);
+      }
+    } catch (err) {
+      setIsAdmin(false);
+    }
+  };
+
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    // Jalankan saat status auth berubah
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      const currentUser = newSession?.user ?? null;
       setSession(newSession);
-      setUser(newSession?.user ?? null);
+      setUser(currentUser);
+      await checkAdminStatus(currentUser);
+      setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session: existing } }) => {
+    // Jalankan saat pertama kali dibuka
+    supabase.auth.getSession().then(async ({ data: { session: existing } }) => {
+      const currentUser = existing?.user ?? null;
       setSession(existing);
-      setUser(existing?.user ?? null);
+      setUser(currentUser);
+      await checkAdminStatus(currentUser);
       setLoading(false);
     });
 
@@ -42,9 +73,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setIsAdmin(false);
   };
-
-  const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   return (
     <AuthContext.Provider value={{ user, session, loading, isAdmin, signOut }}>
