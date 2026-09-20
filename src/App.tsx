@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,6 +38,7 @@ import LearnLesson from "./learn/pages/Lesson";
 import LearnDashboard from "./learn/pages/Dashboard";
 import LearnCertificate from "./learn/pages/Certificate";
 import Library from "./pages/Library";
+import LearnAuth from "./learn/pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -50,74 +51,79 @@ const App = () => {
       return true;
     }
   });
+
   const handleSplashFinish = useCallback(() => {
-    try { sessionStorage.setItem("splashShown", "1"); } catch {}
+    try {
+      sessionStorage.setItem("splashShown", "1");
+    } catch {}
     setShowSplash(false);
   }, []);
 
   return (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
-        <Toaster />
-        <Sonner />
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
         <BrowserRouter>
-          <Routes>
-            {/* Admin routes — no public layout */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="articles" element={<AdminArticles />} />
-              <Route path="articles/new" element={<AdminArticleEdit />} />
-              <Route path="articles/:id" element={<AdminArticleEdit />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="products/new" element={<AdminProductEdit />} />
-              <Route path="products/:id" element={<AdminProductEdit />} />
-              <Route path="projects" element={<AdminProjects />} />
-              <Route path="projects/new" element={<AdminProjectEdit />} />
-              <Route path="projects/:id" element={<AdminProjectEdit />} />
-              <Route path="courses" element={<AdminCourses />} />
-              <Route path="courses/new" element={<AdminCourseEdit />} />
-              <Route path="courses/:id" element={<AdminCourseEdit />} />
-            </Route>
-            {/* Learning platform (learn.satulangkahbooks.com) — separate shell */}
-            <Route path="/learn" element={<LearnLanding />} />
-            <Route path="/learn/courses" element={<LearnCourses />} />
-            <Route path="/learn/course/:slug" element={<LearnCourseDetail />} />
-            <Route path="/learn/course/:slug/lesson/:lessonId" element={<LearnLesson />} />
-            <Route path="/learn/dashboard" element={<LearnDashboard />} />
-            <Route path="/learn/dashboard/:section" element={<LearnDashboard />} />
-            <Route path="/learn/certificate/:slug" element={<LearnCertificate />} />
-            {/* Public routes */}
-            <Route
-              path="*"
-              element={
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/articles" element={<Articles />} />
-                    <Route path="/articles/:id" element={<ArticleDetail />} />
-                    <Route path="/project" element={<Project />} />
-                    <Route path="/product" element={<Product />} />
-                    <Route path="/product/:id" element={<ProductDetail />} />
-                    <Route path="/checkout/:productId" element={<Checkout />} />
-                    <Route path="/e-course" element={<ECourse />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/payment/success" element={<PaymentSuccess />} />
-                    <Route path="/payment/pending" element={<PaymentPending />} />
-                    <Route path="/payment/error" element={<PaymentError />} />
-                    <Route path="*" element={<NotFound />} />
-                    <Route path="/library" element={<Library/>} />
-                  </Routes>
-                </Layout>
-              }
-            />
-          </Routes>
+          <AuthProvider>
+            {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+            <Toaster />
+            <Sonner />
+            <Routes>
+              {/* Admin routes — no public layout */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="articles" element={<AdminArticles />} />
+                <Route path="articles/new" element={<AdminArticleEdit />} />
+                <Route path="articles/:id" element={<AdminArticleEdit />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="products/new" element={<AdminProductEdit />} />
+                <Route path="products/:id" element={<AdminProductEdit />} />
+                <Route path="projects" element={<AdminProjects />} />
+                <Route path="projects/new" element={<AdminProjectEdit />} />
+                <Route path="projects/:id" element={<AdminProjectEdit />} />
+                <Route path="courses" element={<AdminCourses />} />
+                <Route path="courses/new" element={<AdminCourseEdit />} />
+                <Route path="courses/:id" element={<AdminCourseEdit />} />
+              </Route>
+
+              {/* Learning platform — separate shell */}
+              <Route path="/learn" element={<LearnLanding />} />
+              <Route path="/learn/courses" element={<LearnCourses />} />
+              <Route path="/learn/course/:slug" element={<LearnCourseDetail />} />
+              <Route path="/learn/course/:slug/lesson/:lessonId" element={<LearnLesson />} />
+              <Route path="/learn/dashboard" element={<LearnDashboard />} />
+              <Route path="/learn/dashboard/:section" element={<LearnDashboard />} />
+              <Route path="/learn/certificate/:slug" element={<LearnCertificate />} />
+
+              {/* Public routes */}
+              <Route
+                path="*"
+                element={
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/articles" element={<Articles />} />
+                      <Route path="/articles/:id" element={<ArticleDetail />} />
+                      <Route path="/project" element={<Project />} />
+                      <Route path="/product" element={<Product />} />
+                      <Route path="/product/:id" element={<ProductDetail />} />
+                      <Route path="/checkout/:productId" element={<Checkout />} />
+                      <Route path="/e-course" element={<ECourse />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/payment/success" element={<PaymentSuccess />} />
+                      <Route path="/payment/pending" element={<PaymentPending />} />
+                      <Route path="/payment/error" element={<PaymentError />} />
+                      <Route path="/library" element={<Library />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Layout>
+                }
+              />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

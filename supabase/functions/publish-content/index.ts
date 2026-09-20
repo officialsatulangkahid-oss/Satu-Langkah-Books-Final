@@ -6,12 +6,10 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
  * database into `public.content_files` so the website can read pre-rendered
  * JSON instead of querying tables on every page view.
  *
- * Can be triggered by:
- * 1. Admin via Dashboard (Bearer JWT Token)
- * 2. Supabase Database Webhook (x-webhook-secret Header)
+ * Called automatically by the admin panel after each save/delete.
  */
 
-const ADMIN_EMAIL = "officialsatulangkahid@gmail.com";
+// Admin access is role-based (public.user_roles), not a hardcoded email.
 
 const pick = (row: Record<string, unknown>, keys: string[]) =>
   Object.fromEntries(keys.map((k) => [k, row[k] ?? null]));
@@ -30,36 +28,25 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // --- AUTHENTICATION CHECK ---------------------------------------------
+    // --- authenticate: only the admin may publish -------------------------
     const authHeader = req.headers.get("Authorization") ?? "";
-    const webhookSecretHeader = req.headers.get("x-webhook-secret");
-    const expectedSecret = Deno.env.get("WEBHOOK_SECRET");
+    if (!authHeader.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
 
-    // 1. Cek otentikasi via Webhook Secret Key
-    const isWebhookAuthorized = Boolean(
-      webhookSecretHeader && expectedSecret && webhookSecretHeader === expectedSecret
-    );
+    const userClient = createClient(url, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: userData } = await userClient.auth.getUser();
+    if (!userData?.user) return json({ error: "Forbidden" }, 403);
 
-    // 2. Cek otentikasi via Admin Login JWT
-    let isAdminAuthorized = false;
-    if (authHeader.startsWith("Bearer ")) {
-      const userClient = createClient(url, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-        auth: { persistSession: false },
-      });
-      const { data: userData } = await userClient.auth.getUser();
-      if (userData?.user && userData.user.email === ADMIN_EMAIL) {
-        isAdminAuthorized = true;
-      }
-    }
-
-    // Tolak jika kedua jalur di atas tidak valid
-    if (!isWebhookAuthorized && !isAdminAuthorized) {
-      return json({ error: "Unauthorized: Invalid Secret or Admin Token" }, 401);
-    }
-
-    // --- PUBLISH PROCESS ---------------------------------------------------
     const db = createClient(url, serviceKey, { auth: { persistSession: false } });
+    const { data: roleRow } = await db
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) return json({ error: "Forbidden" }, 403);
     const generatedAt = new Date().toISOString();
     const files: { path: string; data: unknown }[] = [];
     const add = (path: string, data: unknown) => files.push({ path, data });
@@ -142,13 +129,10 @@ Deno.serve(async (req) => {
       articles: uniq(articleRows.map((a) => a.category)),
       products: uniq(productRows.map((p) => p.category)),
     });
-    
-    // PERBAIKAN DI SINI: ganti (name) => a.author menjadi (a) => a.author
     add("authors.json", {
       generatedAt,
       items: uniq(articleRows.map((a) => a.author)).map((name) => ({ name })),
     });
-    
     add("manifest.json", {
       generatedAt,
       counts: {
@@ -166,13 +150,11 @@ Deno.serve(async (req) => {
 
     // Remove stale entries (e.g. deleted or unpublished items).
     const keep = rows.map((r) => r.path);
-    if (keep.length > 0) {
-      const { error: delErr } = await db
-        .from("content_files")
-        .delete()
-        .not("path", "in", `(${keep.map((p) => `"${p}"`).join(",")})`);
-      if (delErr) throw delErr;
-    }
+    const { error: delErr } = await db
+      .from("content_files")
+      .delete()
+      .not("path", "in", `(${keep.map((p) => `"${p}"`).join(",")})`);
+    if (delErr) throw delErr;
 
     return json({ ok: true, generatedAt, published: rows.length });
   } catch (e) {
