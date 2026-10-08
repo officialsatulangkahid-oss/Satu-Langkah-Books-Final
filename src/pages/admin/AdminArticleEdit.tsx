@@ -24,7 +24,7 @@ const AdminArticleEdit = () => {
   const [form, setForm] = useState({
     slug: "", title: "", excerpt: "", category: "Refleksi",
     read_time: "5 menit", date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-    author: "Tim Satu Langkah", image_url: "", featured: false, published: true,
+    author: "Tim Satu Langkah", editor: "", image_url: "", featured: false, published: true,
     content_html: "",
   });
 
@@ -40,6 +40,7 @@ const AdminArticleEdit = () => {
       setForm({
         slug: data.slug, title: data.title, excerpt: data.excerpt || "", category: data.category || "Refleksi",
         read_time: data.read_time || "5 menit", date: data.date || "", author: data.author || "Tim Satu Langkah",
+        editor: (data as any).editor || "",
         image_url: data.image_url || "", featured: !!data.featured, published: !!data.published,
         content_html: html,
       });
@@ -56,6 +57,7 @@ const AdminArticleEdit = () => {
     const payload = {
       slug, title: form.title, excerpt: form.excerpt, category: form.category,
       read_time: form.read_time, date: form.date, author: form.author,
+      editor: form.editor.trim() || null,
       image_url: form.image_url || null, featured: form.featured, published: form.published,
       content: form.content_html as any,
     };
@@ -144,6 +146,10 @@ const AdminArticleEdit = () => {
               <Input value={form.author} onChange={(e) => set("author", e.target.value)} />
             </div>
           </div>
+          <div className="space-y-2">
+              <label className="text-sm font-semibold text-heading">Editor</label>
+              <Input value={form.editor} onChange={(e) => set("editor", e.target.value)} placeholder="Nama editor (opsional)" />
+            </div>
 
           <div className="bg-card border border-border rounded-xl p-5">
             <ImageInput value={form.image_url} onChange={(v) => set("image_url", v)} label="Gambar Sampul" />

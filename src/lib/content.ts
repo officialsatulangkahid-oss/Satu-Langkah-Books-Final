@@ -65,6 +65,7 @@ export interface ContentArticleListItem {
   image_url: string | null;
   featured: boolean | null;
   author: string | null;
+  editor?: string | null;
 }
 
 export interface ContentArticle extends ContentArticleListItem {

@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     /* ------------------------------ ARTICLES --------------------------- */
     const LIST_FIELDS = [
       "id", "slug", "title", "excerpt", "category", "read_time",
-      "date", "image_url", "featured", "author",
+      "date", "image_url", "featured", "author", "editor",
     ];
     const { data: articles, error: aErr } = await db
       .from("articles")

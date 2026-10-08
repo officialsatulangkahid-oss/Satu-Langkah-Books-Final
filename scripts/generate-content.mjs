@@ -80,12 +80,13 @@ async function main() {
     "image_url",
     "featured",
     "author",
+    "editor",
   ];
 
   const { data: articles, error: articlesErr } = await supabase
     .from("articles")
     .select(
-      "id, slug, title, excerpt, category, read_time, date, image_url, featured, author, content, created_at"
+      "id, slug, title, excerpt, category, read_time, date, image_url, featured, author, editor, content, created_at"
     )
     .eq("published", true)
     .order("created_at", { ascending: false });

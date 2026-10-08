@@ -165,6 +165,7 @@ CREATE TABLE IF NOT EXISTS public.articles (
   date       text,
   image_url  text,
   author     text DEFAULT 'Tim Satu Langkah',
+  editor     text,
   featured   boolean DEFAULT false,
   published  boolean DEFAULT true,
   content    jsonb DEFAULT '[]'::jsonb,

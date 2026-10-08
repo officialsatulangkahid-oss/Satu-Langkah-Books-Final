@@ -222,7 +222,14 @@ const ArticleDetail = () => {
   }, []);
 
   const readingMeta = useMemo(
-    () => [article?.author, article?.date].filter(Boolean).join(" · "),
+    () =>
+      [
+        article?.author,
+        article?.editor ? `Editor: ${article.editor}` : null,
+        article?.date,
+      ]
+        .filter(Boolean)
+        .join(" · "),
     [article],
   );
 
