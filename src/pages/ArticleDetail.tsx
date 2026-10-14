@@ -28,6 +28,7 @@ interface ArticleData {
   read_time: string | null;
   date: string | null;
   author: string | null;
+  editor: string | null;
   image_url: string | null;
   content: any;
 }
