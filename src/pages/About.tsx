@@ -31,8 +31,7 @@ const About = () => {
     <>
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
-        <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--primary-foreground)/0.03)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary-foreground)/0.03)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <div className="absolute inset-0 bg-primary" />
         
         <div className="container-page relative text-primary-foreground">
           <div className="max-w-3xl animate-fade-in-up">
@@ -161,11 +160,7 @@ const About = () => {
 
       {/* CTA */}
       <section className="relative py-24 lg:py-32 overflow-hidden">
-        <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-          <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-gold/10 blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 bg-primary" />
         
         <div className="container-page relative">
           <div className="max-w-3xl mx-auto text-center text-primary-foreground">
