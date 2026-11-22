@@ -28,7 +28,7 @@ interface ArticleData {
   read_time: string | null;
   date: string | null;
   author: string | null;
-  editor: string | null;
+  editor?: string | null;
   image_url: string | null;
   content: any;
 }
@@ -97,6 +97,21 @@ const ArticleDetail = () => {
     if (!contentRef.current || loading) return;
     paintHighlights(contentRef.current, highlights);
   }, [highlights, loading, article]);
+
+  /* Wrap tables in a scroll container so wide tables never overflow */
+  useEffect(() => {
+    const node = contentRef.current;
+    if (!node || loading) return;
+    node.querySelectorAll("table").forEach((table) => {
+      const parent = table.parentElement;
+      if (!parent || parent.classList.contains("table-wrap")) return;
+      const wrap = document.createElement("div");
+      wrap.className = "table-wrap";
+      parent.insertBefore(wrap, table);
+      wrap.appendChild(table);
+    });
+  }, [loading, article]);
+
 
   useEffect(() => {
     const node = contentRef.current;

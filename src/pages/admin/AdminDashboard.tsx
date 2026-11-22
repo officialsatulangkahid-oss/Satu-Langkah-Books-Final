@@ -8,7 +8,7 @@ const cards = [
   { table: "products", label: "Produk", icon: Package, color: "text-emerald-600 bg-emerald-50", to: "/admin/products" },
   { table: "projects", label: "Project", icon: FolderKanban, color: "text-amber-600 bg-amber-50", to: "/admin/projects" },
   { table: "courses", label: "E-Course", icon: GraduationCap, color: "text-purple-600 bg-purple-50", to: "/admin/courses" },
-  { table: "orders", label: "Pesanan", icon: ShoppingCart, color: "text-rose-600 bg-rose-50", to: "/admin" },
+  { table: "orders", label: "Pesanan", icon: ShoppingCart, color: "text-rose-600 bg-rose-50", to: "/admin/orders" },
 ] as const;
 
 const AdminDashboard = () => {

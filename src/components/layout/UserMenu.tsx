@@ -14,9 +14,9 @@ import { LogIn, LogOut, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const UserMenu = ({ compact = false }: { compact?: boolean }) => {
-  const { user, signOut, loading, isAdmin } = useAuth();
+  const { user, signOut, loading, roleLoading, isAdmin, isArticleEditor } = useAuth();
 
-  if (loading) return <div className="h-9 w-20" />;
+  if (loading || roleLoading) return <div className="h-9 w-20" />;
 
   if (!user) {
     return (
@@ -62,12 +62,12 @@ const UserMenu = ({ compact = false }: { compact?: boolean }) => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {isAdmin && (
+        {(isAdmin || isArticleEditor) && (
           <>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to="/admin">
+              <Link to={isArticleEditor ? "/admin/articles" : "/admin"}>
                 <ShieldCheck className="h-4 w-4 mr-2 text-gold" />
-                Admin Panel
+                {isArticleEditor ? "Editor Artikel" : "Admin Panel"}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

@@ -25,6 +25,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminArticles from "./pages/admin/AdminArticles";
 import AdminArticleEdit from "./pages/admin/AdminArticleEdit";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminDigitalProducts from "./pages/admin/AdminDigitalProducts";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminProductEdit from "./pages/admin/AdminProductEdit";
 import AdminProjects from "./pages/admin/AdminProjects";
@@ -38,7 +40,6 @@ import LearnLesson from "./learn/pages/Lesson";
 import LearnDashboard from "./learn/pages/Dashboard";
 import LearnCertificate from "./learn/pages/Certificate";
 import Library from "./pages/Library";
-import LearnAuth from "./learn/pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,8 @@ const App = () => {
               {/* Admin routes — no public layout */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="digital-products" element={<AdminDigitalProducts />} />
                 <Route path="articles" element={<AdminArticles />} />
                 <Route path="articles/new" element={<AdminArticleEdit />} />
                 <Route path="articles/:id" element={<AdminArticleEdit />} />

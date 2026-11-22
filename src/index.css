@@ -643,6 +643,58 @@
   .reading-body .callout-quote { border-color: hsl(var(--gold)); background: hsl(var(--gold) / 0.08); font-style: italic; }
   .reading-body .callout-example { border-color: hsl(var(--muted-foreground)); background: hsl(var(--muted) / 0.7); }
 
+  /* Tables (inserted via admin editor) — wrapped in .table-wrap by
+     ArticleDetail so wide tables scroll horizontally on mobile */
+  .reading-body .table-wrap {
+    margin: 1.75rem 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+  }
+
+  .reading-body .article-table,
+  .reading-body table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .reading-body thead th,
+  .reading-body th {
+    background: hsl(var(--muted) / 0.6);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid hsl(var(--gold));
+    white-space: nowrap;
+  }
+
+  .reading-body td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    vertical-align: top;
+  }
+
+  .reading-body tbody tr:last-child td { border-bottom: none; }
+
+  .reading-body tbody tr:nth-child(even) { background: hsl(var(--muted) / 0.25); }
+
+  .reading-body tbody tr { transition: background 0.2s ease; }
+  .reading-body tbody tr:hover { background: hsl(var(--gold) / 0.07); }
+
+  .reading-body .article-table figcaption,
+  .reading-body table caption {
+    caption-side: bottom;
+    padding: 0.6rem 1rem;
+    font-size: 0.78rem;
+    color: hsl(var(--muted-foreground));
+    text-align: left;
+  }
+
   /* Footnotes */
   .reading-body .footnote-ref {
     position: relative;
@@ -702,4 +754,35 @@
     opacity: 1 !important;
     transition: none;
   }
+}
+/* Editor canvas tables — must stay unlayered: Tailwind purges layered
+   selectors whose classes aren't scanned from source files. */
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.6rem 0.8rem;
+  position: relative;
+  min-width: 4rem;
+}
+
+.ProseMirror th {
+  background: hsl(var(--muted) / 0.6);
+  font-weight: 700;
+  text-align: left;
+  border-bottom: 2px solid hsl(var(--gold));
+}
+
+.ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--gold) / 0.12);
+  pointer-events: none;
 }

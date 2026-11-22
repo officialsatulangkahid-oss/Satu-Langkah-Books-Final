@@ -9,7 +9,10 @@
     "build": "npm run generate:content && vite build",
     "build:dev": "npm run generate:content && vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:payments": "node --experimental-strip-types --test tests/payment-domain.test.mjs tests/payment-database.test.mjs",
+    "check:types": "tsc --noEmit -p tsconfig.app.json",
+    "test:edge": "deno test --allow-env --allow-read=supabase,tests --config tests/deno.json tests/payment-edge.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -75,6 +78,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.16.5",

@@ -132,7 +132,7 @@ const AdminProductEdit = () => {
             <div className="space-y-2"><label className="text-sm font-semibold text-heading">Slug</label><Input value={form.slug} onChange={(e) => set("slug", slugify(e.target.value))} /></div>
             <div className="space-y-2"><label className="text-sm font-semibold text-heading">Kategori</label><Input value={form.category} onChange={(e) => set("category", e.target.value)} /></div>
             <div className="space-y-2"><label className="text-sm font-semibold text-heading">Harga (IDR)</label><Input type="number" value={form.price} onChange={(e) => set("price", Number(e.target.value))} /></div>
-            <div className="space-y-2"><label className="text-sm font-semibold text-heading">Link Eksternal (opsional)</label><Input value={form.external_link} onChange={(e) => set("external_link", e.target.value)} placeholder="https://lynk.id/…" /></div>
+            <div className="space-y-2"><label className="text-sm font-semibold text-heading">Link pembelian eksternal (publik)</label><Input value={form.external_link} onChange={(e) => set("external_link", e.target.value)} placeholder="https://lynk.id/…" /><p className="text-xs text-muted-foreground">Jangan isi link file berbayar di sini. Atur file atau Google Drive melalui menu Produk digital.</p></div>
           </div>
 
           <div className="bg-card border border-border rounded-xl p-5">

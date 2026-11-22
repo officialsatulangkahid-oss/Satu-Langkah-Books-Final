@@ -1,174 +1,50 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { loadSnap, openSnap, paymentCall } from "@/lib/midtrans";
+import { createPayment, money, type PaymentQuote } from "@/lib/payments";
+import { toast } from "sonner";
 
-interface CheckoutModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    type: "ebook" | "ecourse";
-  };
-}
-
-const CheckoutModal = ({ isOpen, onClose, product }: CheckoutModalProps) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!name.trim() || !email.trim()) {
-      toast({
-        title: "Data tidak lengkap",
-        description: "Mohon isi nama dan email Anda",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
+interface Props { isOpen: boolean; onClose: () => void; product: { id: string; name: string; price: number; type: "ebook" | "ecourse" } }
+export default function CheckoutModal({ isOpen, onClose, product }: Props) {
+  const navigate = useNavigate();
+  const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
+  const [quote, setQuote] = useState<PaymentQuote | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const lock = useRef(false);
+  useEffect(() => {
+    if (!isOpen) return;
+    let alive = true; setQuote(null); setError("");
+    paymentCall<PaymentQuote>("payment-catalog", { productType: product.type, productId: product.id }).then((value) => { if (alive) setQuote(value); }).catch((err: Error) => { if (alive) setError(err.message); });
+    return () => { alive = false; };
+  }, [isOpen, product.id, product.type]);
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!quote || lock.current) return;
+    lock.current = true; setBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-transaction", {
-        body: {
-          productType: product.type,
-          productId: product.id,
-          productName: product.name,
-          amount: product.price,
-          customerName: name.trim(),
-          customerEmail: email.trim(),
-          customerPhone: phone.trim() || undefined,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.redirectUrl) {
-        // Redirect to Midtrans payment page
-        window.location.href = data.redirectUrl;
-      } else {
-        throw new Error("No redirect URL received");
-      }
-    } catch (error: any) {
-      console.error("Checkout error:", error);
-      toast({
-        title: "Gagal memproses pembayaran",
-        description: error.message || "Silakan coba lagi",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+      await loadSnap();
+      const order = await createPayment(quote, customer);
+      onClose();
+      const finish = () => navigate(`/payment/pending?order_id=${encodeURIComponent(order.orderId)}`);
+      if (order.token && order.amount === quote.amount) openSnap(order.token, finish); else finish();
+    } catch (err) { toast.error((err as Error).message); }
+    finally { lock.current = false; setBusy(false); }
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-heading">Checkout</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Product Info */}
-          <div className="p-4 rounded-lg bg-cream border border-border">
-            <h4 className="font-semibold text-heading">{product.name}</h4>
-            <p className="text-lg font-bold text-primary mt-1">
-              {formatPrice(product.price)}
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nama Lengkap *</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Masukkan nama lengkap"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@contoh.com"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">No. WhatsApp (Opsional)</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="08xxxxxxxxxx"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="pt-4 flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 bg-primary hover:bg-primary/90"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  "Bayar Sekarang"
-                )}
-              </Button>
-            </div>
-          </form>
-
-          <p className="text-xs text-muted-foreground text-center">
-            Pembayaran diproses melalui Midtrans Payment Gateway
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default CheckoutModal;
+  return <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !busy) onClose(); }}><DialogContent><DialogHeader><DialogTitle>Checkout</DialogTitle></DialogHeader>
+    <p className="font-semibold">{quote?.product.name ?? product.name}</p>
+    {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
+    <p>{quote ? money(quote.amount) : "Memeriksa harga…"}</p>
+    <form onSubmit={submit} className="space-y-4">
+      <div><Label htmlFor="course-name">Nama lengkap</Label><Input id="course-name" required minLength={2} maxLength={100} value={customer.name} onChange={(e) => setCustomer({ ...customer, name: e.target.value })} disabled={busy} /></div>
+      <div><Label htmlFor="course-email">Email</Label><Input id="course-email" required type="email" maxLength={254} value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} disabled={busy} /></div>
+      <div><Label htmlFor="course-phone">Nomor WhatsApp</Label><Input id="course-phone" type="tel" maxLength={20} value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} disabled={busy} /></div>
+      <p className="text-xs text-muted-foreground">Pilih metode pembayaran di Midtrans. Akses produk tersedia melalui halaman pesanan setelah pembayaran diverifikasi.</p>
+      <Button type="submit" disabled={busy || !quote} className="w-full">{busy ? "Memproses…" : "Bayar sekarang"}</Button>
+    </form>
+  </DialogContent></Dialog>;
+}

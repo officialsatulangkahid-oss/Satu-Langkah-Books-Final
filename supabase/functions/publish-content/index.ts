@@ -40,13 +40,14 @@ Deno.serve(async (req) => {
     if (!userData?.user) return json({ error: "Forbidden" }, 403);
 
     const db = createClient(url, serviceKey, { auth: { persistSession: false } });
-    const { data: roleRow } = await db
+    const { data: roleRows } = await db
       .from("user_roles")
       .select("role")
       .eq("user_id", userData.user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) return json({ error: "Forbidden" }, 403);
+;
+    const isAdmin = roleRows?.some(row => row.role === "admin");
+    const isArticleEditor = roleRows?.some(row => row.role === "article_editor");
+    if (!isAdmin && !isArticleEditor) return json({ error: "Forbidden" }, 403);
     const generatedAt = new Date().toISOString();
     const files: { path: string; data: unknown }[] = [];
     const add = (path: string, data: unknown) => files.push({ path, data });
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
     const { data: articles, error: aErr } = await db
       .from("articles")
       .select(
-        "id, slug, title, excerpt, category, read_time, date, image_url, featured, author, content, created_at"
+        "id, slug, title, excerpt, category, read_time, date, image_url, featured, author, editor, content, created_at"
       )
       .eq("published", true)
       .order("created_at", { ascending: false });
@@ -73,6 +74,28 @@ Deno.serve(async (req) => {
     for (const a of articleRows) {
       if (!a.slug) continue;
       add(`articles/${a.slug}.json`, { generatedAt, ...pick(a, [...LIST_FIELDS, "content"]) });
+    }
+
+    // Article editors can only regenerate article files and article taxonomy.
+    // Existing product categories and all non-article content stay intact.
+    if (!isAdmin) {
+      const { data: categories, error: categoryError } = await db.from("content_files").select("data").eq("path", "categories.json").maybeSingle();
+      if (categoryError) throw categoryError;
+      const previous = categories?.data as Record<string, unknown> | null;
+      add("categories.json", { ...previous, generatedAt, articles: [...new Set(articleRows.map(a => a.category).filter(Boolean))].sort(), products: previous?.products ?? [] });
+      add("authors.json", { generatedAt, items: [...new Set(articleRows.map(a => a.author).filter(Boolean))].sort().map(name => ({ name })) });
+      const rows = files.map(f => ({ ...f, updated_at: generatedAt }));
+      const { error: writeError } = await db.from("content_files").upsert(rows, { onConflict: "path" });
+      if (writeError) throw writeError;
+      const { data: existing, error: listError } = await db.from("content_files").select("path").like("path", "articles/%");
+      if (listError) throw listError;
+      const keep = new Set(rows.map(row => row.path));
+      const stale = (existing ?? []).map(row => row.path).filter(path => !keep.has(path));
+      if (stale.length) {
+        const { error: deleteError } = await db.from("content_files").delete().in("path", stale);
+        if (deleteError) throw deleteError;
+      }
+      return json({ ok: true, scope: "articles", generatedAt, published: rows.length });
     }
 
     /* ------------------------------ PRODUCTS --------------------------- */

@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { isArticleEditorPath } from "@/lib/adminAccess";
 import { useEffect } from "react";
 import {
   LayoutDashboard, FileText, Package, FolderKanban, GraduationCap,
@@ -12,26 +13,32 @@ const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/admin/articles", icon: FileText, label: "Artikel" },
   { to: "/admin/products", icon: Package, label: "Produk" },
+  { to: "/admin/orders", icon: Package, label: "Pesanan" },
+  { to: "/admin/digital-products", icon: Package, label: "Produk digital" },
   { to: "/admin/projects", icon: FolderKanban, label: "Project" },
   { to: "/admin/courses", icon: GraduationCap, label: "E-Course" },
 ];
 
 const AdminLayout = () => {
-  const { user, loading, isAdmin, signOut } = useAuth();
+  const { user, loading, roleLoading, isAdmin, isArticleEditor, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    if (loading) return;
-    if (!user) navigate(`/auth?redirect=${encodeURIComponent(location.pathname)}`);
-  }, [user, loading, navigate, location.pathname]);
+  const articleEditorPathAllowed = isArticleEditorPath(location.pathname);
+  const visibleNavItems = isArticleEditor ? navItems.filter(item => item.to === "/admin/articles") : navItems;
 
-  if (loading) {
+  useEffect(() => {
+    if (loading || roleLoading) return;
+    if (!user) navigate(`/auth?redirect=${encodeURIComponent(location.pathname)}`);
+    else if (isArticleEditor && !articleEditorPathAllowed) navigate("/admin/articles", { replace: true });
+  }, [user, loading, roleLoading, isArticleEditor, articleEditorPathAllowed, navigate, location.pathname]);
+
+  if (loading || roleLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground">Memuat…</p></div>;
   }
   if (!user) return null;
 
-  if (!isAdmin) {
+  if (!isAdmin && !isArticleEditor) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream px-4">
         <div className="max-w-md text-center bg-card border border-border rounded-2xl p-10 shadow-card">
@@ -40,7 +47,7 @@ const AdminLayout = () => {
           </div>
           <h1 className="text-2xl font-bold text-heading mb-2">Akses Ditolak</h1>
           <p className="text-muted-foreground text-sm mb-6">
-            Halaman ini hanya untuk admin. Akun kamu (<span className="font-medium">{user.email}</span>) bukan admin.
+            Halaman ini hanya untuk admin dan editor artikel. Akun kamu (<span className="font-medium">{user.email}</span>) tidak memiliki izin panel.
           </p>
           <Button variant="outline" onClick={() => navigate("/")}>
             <Home className="h-4 w-4 mr-2" />
@@ -51,6 +58,8 @@ const AdminLayout = () => {
     );
   }
 
+  if (isArticleEditor && !articleEditorPathAllowed) return null;
+
   return (
     <div className="min-h-screen bg-cream flex w-full">
       <aside className="hidden md:flex w-64 flex-col bg-primary text-primary-foreground sticky top-0 h-screen">
@@ -60,13 +69,13 @@ const AdminLayout = () => {
               <ShieldCheck className="h-5 w-5 text-gold" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">Admin</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">{isArticleEditor ? "Editor Artikel" : "Admin"}</p>
               <p className="text-sm font-bold">Satu Langkah</p>
             </div>
           </div>
         </div>
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -99,12 +108,12 @@ const AdminLayout = () => {
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-gold" />
-            <span className="font-bold text-sm">Admin Panel</span>
+            <span className="font-bold text-sm">{isArticleEditor ? "Editor Artikel" : "Admin Panel"}</span>
           </div>
           <button onClick={() => navigate("/")} className="text-xs">Keluar</button>
         </div>
         <div className="flex overflow-x-auto border-t border-primary-foreground/10">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end}
               className={({ isActive }) => cn("flex-shrink-0 px-4 py-2.5 text-xs font-medium border-b-2",
                 isActive ? "border-gold text-primary-foreground" : "border-transparent text-primary-foreground/70")}>

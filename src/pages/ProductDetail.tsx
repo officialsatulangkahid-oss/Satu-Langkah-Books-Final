@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ShoppingBag, ExternalLink, BookOpen, Building2, FileText, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CHECKOUT_PRODUCTS } from "@/data/checkoutProducts";
 import { getProduct, type ContentProduct } from "@/lib/content";
 import { PRODUCT_IMAGES } from "@/pages/Product";
 
@@ -195,7 +194,7 @@ const ProductDetail = () => {
               )}
 
               {/* CTA */}
-              {CHECKOUT_PRODUCTS[product.slug] ? (
+              {product.checkout_enabled ? (
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     to={`/checkout/${product.slug}`}

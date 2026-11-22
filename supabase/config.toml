@@ -8,3 +8,22 @@ verify_jwt = false
 
 [functions.get-midtrans-config]
 verify_jwt = false
+
+[functions.payment-catalog]
+verify_jwt = false
+
+[functions.order-status]
+verify_jwt = false
+
+[functions.order-resume]
+verify_jwt = false
+
+[functions.order-download]
+verify_jwt = false
+
+# The handler verifies the real user session AND the database admin role.
+[functions.admin-payment-assets]
+verify_jwt = false
+
+[functions.publish-content]
+verify_jwt = false
