@@ -1,3 +1,4 @@
+import { safeRedirect } from "@/lib/authRedirect";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ const signupSchema = z
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const destination = safeRedirect(searchParams.get("redirect"), "/");
   const initialMode = searchParams.get("mode") === "signup" ? "signup" : "login";
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [email, setEmail] = useState("");
@@ -66,8 +68,8 @@ const Auth = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
-  }, [user, navigate]);
+    if (user) navigate(destination, { replace: true });
+  }, [user, navigate, destination]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +89,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: window.location.origin + destination,
             data: {
               full_name: fullName,
               username,
@@ -99,15 +101,15 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Pendaftaran berhasil! Selamat datang.");
-        navigate("/");
+        navigate(destination);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Selamat datang kembali!");
-        navigate("/");
+        navigate(destination);
       }
-    } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }
@@ -120,13 +122,13 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/admin`,
+        redirectTo: window.location.origin + destination,
     },
     });
 
     if (error) throw error;
-  } catch (err: any) {
-    toast.error(err.message || "Gagal masuk dengan Google");
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : "Gagal masuk dengan Google");
     setLoading(false);
   }
 };
@@ -241,7 +243,7 @@ const Auth = () => {
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">
                       Jenis Kelamin
                     </Label>
-                    <Select value={gender} onValueChange={(v) => setGender(v as any)}>
+                    <Select value={gender} onValueChange={(v) => setGender(v === "male" || v === "female" ? v : "")}>
                       <SelectTrigger className="h-11"><SelectValue placeholder="Pilih" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="male">Laki-laki</SelectItem>

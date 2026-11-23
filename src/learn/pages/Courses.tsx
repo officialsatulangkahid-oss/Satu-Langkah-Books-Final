@@ -43,7 +43,7 @@ const Courses = () => {
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold sm:text-4xl">Semua Kursus</h1>
           <p className="mt-3 max-w-xl text-muted-foreground">
-            Pilih kelas sesuai minat dan tingkat pengalamanmu. Semua kelas bisa diakses selamanya.
+            Pilih kelas sesuai minat dan tingkat pengalamanmu. Kelas perdana tersedia gratis untuk belajar mandiri.
           </p>
           <div className="mt-8 flex max-w-xl items-center gap-2 rounded-full border border-border bg-background px-5 py-3">
             <Search className="h-4 w-4 text-muted-foreground" />

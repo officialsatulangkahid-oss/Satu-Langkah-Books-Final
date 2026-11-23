@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -7,26 +7,32 @@ import type { QuizQuestion } from "../data";
 
 type Props = {
   questions: QuizQuestion[];
+  previousResult?: { score: number; total: number };
   onFinish?: (score: number, total: number) => void;
 };
 
-const Quiz = ({ questions, onFinish }: Props) => {
+const Quiz = ({ questions, onFinish, previousResult }: Props) => {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
+  const saved = previousResult?.total === questions.length && previousResult.score >= 0 && previousResult.score <= questions.length ? previousResult : null;
+  const [score, setScore] = useState(saved?.score ?? 0);
+  const [done, setDone] = useState(!!saved);
+  const checked = useRef(false);
 
   const q = questions[index];
   const percent = Math.round((index / questions.length) * 100);
 
   const check = () => {
-    if (selected === null) return;
+    if (selected === null || checked.current) return;
+    checked.current = true;
     setRevealed(true);
     if (selected === q.correct) setScore((s) => s + 1);
   };
 
   const next = () => {
+    if (!checked.current) return;
+    checked.current = false;
     const finalScore = score;
     if (index + 1 >= questions.length) {
       setDone(true);
@@ -39,12 +45,15 @@ const Quiz = ({ questions, onFinish }: Props) => {
   };
 
   const reset = () => {
+    checked.current = false;
     setIndex(0);
     setSelected(null);
     setRevealed(false);
     setScore(0);
     setDone(false);
   };
+
+  if (!questions.length) return <p className="text-sm text-muted-foreground">Kuis sesi ini belum tersedia.</p>;
 
   if (done) {
     const pct = Math.round((score / questions.length) * 100);
@@ -95,6 +104,7 @@ const Quiz = ({ questions, onFinish }: Props) => {
             <button
               key={opt}
               disabled={revealed}
+              aria-pressed={selected === i}
               onClick={() => setSelected(i)}
               className={cn(
                 "flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition-all duration-200",

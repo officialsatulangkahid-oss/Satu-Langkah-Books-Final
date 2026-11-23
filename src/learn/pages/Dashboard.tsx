@@ -1,5 +1,5 @@
 import { Link, NavLink, useParams } from "react-router-dom";
-import { Award, BookOpen, Clock, Flame, Heart, LayoutDashboard, NotebookPen, Trophy, User } from "lucide-react";
+import { Award, BookOpen, Clock, Flame, Heart, LayoutDashboard, NotebookPen, Trophy, User, Hand } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import LearnLayout from "../components/LearnLayout";
@@ -11,7 +11,7 @@ const nav = [
   { to: "/learn/dashboard", label: "Ringkasan", icon: LayoutDashboard, end: true },
   { to: "/learn/dashboard/courses", label: "Kursus Saya", icon: BookOpen },
   { to: "/learn/dashboard/wishlist", label: "Wishlist", icon: Heart },
-  { to: "/learn/dashboard/certificates", label: "Sertifikat", icon: Award },
+  { to: "/learn/dashboard/certificates", label: "Penyelesaian", icon: Award },
   { to: "/learn/dashboard/notes", label: "Catatan", icon: NotebookPen },
   { to: "/learn/dashboard/profile", label: "Profil", icon: User },
 ];
@@ -20,14 +20,14 @@ const Dashboard = () => {
   const { section } = useParams();
   const { state, totalMinutes, totalLessons, certificates, setStudentName, toggleWishlist } = useProgress();
 
-  const inProgress = courses.filter((c) => (state.completed[c.slug]?.length ?? 0) > 0);
+  const inProgress = courses.filter((c) => state.enrolled.includes(c.slug));
   const wishlist = courses.filter((c) => state.wishlist.includes(c.slug));
   const notes = Object.entries(state.notes).filter(([, v]) => v.trim());
 
   const stats = [
     { label: "Kursus berjalan", value: inProgress.length, icon: BookOpen },
     { label: "Pelajaran selesai", value: totalLessons, icon: Trophy },
-    { label: "Menit belajar", value: totalMinutes, icon: Clock },
+    { label: "Estimasi menit materi", value: totalMinutes, icon: Clock },
     { label: "Hari beruntun", value: state.streak, icon: Flame },
   ];
 
@@ -56,7 +56,12 @@ const Dashboard = () => {
         <div className="mt-8 min-w-0 flex-1 lg:mt-0">
           {!section && (
             <>
-              <h1 className="text-2xl font-bold sm:text-3xl">Halo, {state.studentName.split(" ")[0]} 👋</h1>
+              <h1 className="flex flex-wrap items-center gap-3 text-2xl font-bold sm:text-3xl">
+                <span>Halo, {state.studentName.split(" ")[0]}</span>
+                <span aria-hidden="true" className="inline-flex shrink-0 items-center justify-center text-primary">
+                  <Hand className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={1.5} />
+                </span>
+              </h1>
               <p className="mt-2 text-sm text-muted-foreground">Lanjutkan belajarmu hari ini.</p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -108,7 +113,7 @@ const Dashboard = () => {
             <>
               <h1 className="text-2xl font-bold">Kursus Saya</h1>
               <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {(inProgress.length ? inProgress : courses).map((c) => (
+                {inProgress.map((c) => (
                   <CourseCard key={c.slug} course={c} percent={courseProgress(state, c).percent} />
                 ))}
               </div>
@@ -132,7 +137,7 @@ const Dashboard = () => {
 
           {section === "certificates" && (
             <>
-              <h1 className="text-2xl font-bold">Sertifikat</h1>
+              <h1 className="text-2xl font-bold">Penyelesaian</h1>
               {certificates.length ? (
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {certificates.map((c) => (
@@ -140,14 +145,14 @@ const Dashboard = () => {
                       <Award className="h-8 w-8 text-primary" />
                       <div>
                         <p className="text-sm font-semibold">{c.title}</p>
-                        <p className="text-xs text-muted-foreground">Lihat & unduh sertifikat</p>
+                        <p className="text-xs text-muted-foreground">Lihat & unduh ringkasan penyelesaian</p>
                       </div>
                     </Link>
                   ))}
                 </div>
               ) : (
                 <p className="mt-6 text-sm text-muted-foreground">
-                  Selesaikan satu kursus hingga 100% untuk membuka sertifikat.
+                  Selesaikan satu kursus hingga 100% untuk membuka ringkasan penyelesaian.
                 </p>
               )}
             </>
@@ -175,14 +180,14 @@ const Dashboard = () => {
             <>
               <h1 className="text-2xl font-bold">Profil</h1>
               <div className="learn-card mt-6 max-w-md p-6">
-                <label className="text-sm font-medium">Nama pada sertifikat</label>
+                <label className="text-sm font-medium">Nama tampilan</label>
                 <Input
                   value={state.studentName}
                   onChange={(e) => setStudentName(e.target.value)}
                   className="mt-2 rounded-xl"
                 />
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Nama ini akan tercetak pada sertifikat penyelesaian kursus.
+                  Nama ini akan tercetak pada ringkasan penyelesaian penyelesaian kursus.
                 </p>
               </div>
             </>

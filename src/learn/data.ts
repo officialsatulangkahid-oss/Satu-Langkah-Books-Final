@@ -1,3 +1,4 @@
+import { designCourse } from "./designCourse";
 export type Lesson = {
   id: string;
   title: string;
@@ -5,6 +6,12 @@ export type Lesson = {
   minutes: number;
   type: "video" | "reading";
   hasQuiz?: boolean;
+  quiz?: QuizQuestion[];
+  videoId?: string;
+  creator?: string;
+  videoTitle?: string;
+  language?: string;
+  practice?: string;
   overview: string;
   objectives: string[];
   summary: string[];
@@ -90,7 +97,7 @@ const lesson = (
   ...extra,
 });
 
-export const courses: Course[] = [
+export const demoCourses: Course[] = [
   {
     slug: "how-to-read-a-book",
     title: "How to Read a Book",
@@ -362,14 +369,8 @@ export const courses: Course[] = [
   },
 ];
 
-export const categories = [
-  { name: "Literasi", icon: "BookOpen", count: 12, desc: "Teknik & seni membaca" },
-  { name: "Islam & Ilmu", icon: "Moon", count: 8, desc: "Tradisi keilmuan Islam" },
-  { name: "Menulis", icon: "PenLine", count: 6, desc: "Esai, catatan, refleksi" },
-  { name: "Kebiasaan", icon: "Sprout", count: 5, desc: "Ritme belajar harian" },
-  { name: "Pendidikan", icon: "GraduationCap", count: 7, desc: "Belajar & mengajar" },
-  { name: "Filsafat", icon: "Compass", count: 4, desc: "Berpikir mendalam" },
-];
+export const courses: Course[] = [designCourse];
+export const categories = [{ name: "Desain", icon: "Compass", count: 1, desc: "Prinsip visual hingga praktik" }];
 
 export const testimonials = [
   {
@@ -393,26 +394,11 @@ export const testimonials = [
 ];
 
 export const faqs = [
-  {
-    q: "Apakah kursus bisa diakses selamanya?",
-    a: "Ya. Setelah mendaftar, kamu memiliki akses seumur hidup ke seluruh materi kursus beserta pembaruannya.",
-  },
-  {
-    q: "Apakah saya mendapatkan sertifikat?",
-    a: "Sertifikat otomatis diterbitkan ketika progres kursus mencapai 100%, lengkap dengan ID unik dan bisa diunduh.",
-  },
-  {
-    q: "Apakah materi bisa diunduh?",
-    a: "Ringkasan pelajaran dan lembar kerja tersedia dalam format PDF yang dapat diunduh di setiap pelajaran.",
-  },
-  {
-    q: "Apakah cocok untuk pemula?",
-    a: "Sangat cocok. Setiap kursus memiliki tingkat kesulitan yang jelas, dan kamu bisa memulai dari kursus level Pemula.",
-  },
-  {
-    q: "Bagaimana cara belajar lewat ponsel?",
-    a: "Seluruh tampilan telah dioptimalkan untuk ponsel. Kurikulum akan tampil sebagai panel geser agar video tetap menjadi fokus utama.",
-  },
+ {q:"Apakah kelas ini gratis?",a:"Ya. Improve Your Design gratis. Masuk dengan Google atau daftar melalui email untuk menyimpan progres dan catatan pribadi."},
+ {q:"Siapa yang mengajar?",a:"Tim Satu Langkah menyusun urutan, panduan Bahasa Indonesia, kuis, dan latihan. Video referensi berasal dari kanal LearnFree dan Gareth David Studio. Tidak ada klaim afiliasi atau kerja sama resmi."},
+ {q:"Apakah video berbahasa Indonesia?",a:"Video referensi berbahasa Inggris. Panduan dan latihan tersedia dalam Bahasa Indonesia; subtitle mengikuti yang disediakan masing-masing video di YouTube."},
+ {q:"Apakah ada sertifikat resmi?",a:"Versi awal ini menyediakan ringkasan penyelesaian belajar mandiri. Belum ada penilaian mentor, sertifikat kompetensi, atau verifikasi publik."},
+ {q:"Apa yang bisa diunduh?",a:"Ringkasan dan brief latihan buatan Satu Langkah dapat diunduh sebagai teks. Video tetap diputar melalui YouTube dan tidak disediakan untuk diunduh."},
 ];
 
 export const getCourse = (slug?: string) => courses.find((c) => c.slug === slug);

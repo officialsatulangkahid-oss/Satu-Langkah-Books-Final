@@ -14,6 +14,13 @@ export type Database = {
   }
   public: {
     Tables: {
+      learn_progress: {
+        Row: { user_id: string; state: Json; updated_at: string }
+        Insert: { user_id: string; state?: Json; updated_at?: string }
+        Update: { user_id?: string; state?: Json; updated_at?: string }
+        Relationships: []
+      }
+
       articles: {
         Row: {
           author: string | null

@@ -1,3 +1,6 @@
+import LearnAuth from "./learn/pages/Auth";
+import RequireLearner from "./learn/components/RequireLearner";
+import { LearnProgressProvider } from "./learn/progressStore";
 import { useState, useCallback } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -56,7 +59,7 @@ const App = () => {
   const handleSplashFinish = useCallback(() => {
     try {
       sessionStorage.setItem("splashShown", "1");
-    } catch {}
+    } catch { /* Storage may be unavailable in private browsing. */ }
     setShowSplash(false);
   }, []);
 
@@ -68,6 +71,7 @@ const App = () => {
             {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
             <Toaster />
             <Sonner />
+            <LearnProgressProvider>
             <Routes>
               {/* Admin routes — no public layout */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -89,13 +93,14 @@ const App = () => {
               </Route>
 
               {/* Learning platform — separate shell */}
+              <Route path="/learn/auth" element={<LearnAuth />} />
               <Route path="/learn" element={<LearnLanding />} />
               <Route path="/learn/courses" element={<LearnCourses />} />
               <Route path="/learn/course/:slug" element={<LearnCourseDetail />} />
-              <Route path="/learn/course/:slug/lesson/:lessonId" element={<LearnLesson />} />
-              <Route path="/learn/dashboard" element={<LearnDashboard />} />
-              <Route path="/learn/dashboard/:section" element={<LearnDashboard />} />
-              <Route path="/learn/certificate/:slug" element={<LearnCertificate />} />
+              <Route path="/learn/course/:slug/lesson/:lessonId" element={<RequireLearner><LearnLesson /></RequireLearner>} />
+              <Route path="/learn/dashboard" element={<RequireLearner><LearnDashboard /></RequireLearner>} />
+              <Route path="/learn/dashboard/:section" element={<RequireLearner><LearnDashboard /></RequireLearner>} />
+              <Route path="/learn/certificate/:slug" element={<RequireLearner><LearnCertificate /></RequireLearner>} />
 
               {/* Public routes */}
               <Route
@@ -123,6 +128,7 @@ const App = () => {
                 }
               />
             </Routes>
+            </LearnProgressProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

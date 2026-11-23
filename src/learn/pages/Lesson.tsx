@@ -1,5 +1,6 @@
+import LessonVideo from "../components/LessonVideo";
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -32,8 +33,12 @@ const Lesson = () => {
   if (!course) return <NotFound />;
 
   const lessons = allLessons(course);
-  const index = Math.max(0, lessons.findIndex((l) => l.id === lessonId));
+  const index = lessons.findIndex((l) => l.id === lessonId);
+  if (index < 0) return <NotFound />;
+  if (!state.enrolled.includes(course.slug)) return <Navigate to={`/learn/course/${course.slug}`} replace />;
   const lesson = lessons[index];
+  const sessionQuestions = lesson.quiz ?? course.quiz;
+  const savedQuiz = state.quizScores[`${course.slug}:${lesson.id}`];
   const completed = state.completed[course.slug] ?? [];
   const isDone = completed.includes(lesson.id);
   const { percent } = courseProgress(state, course);
@@ -45,7 +50,7 @@ const Lesson = () => {
   };
 
   const finishAndNext = () => {
-    if (!isDone) toggleLesson(course.slug, lesson.id, lesson.minutes);
+    if (!isDone) toggleLesson(course.slug, lesson.id);
     if (index + 1 < lessons.length) go(index + 1);
     else navigate(`/learn/certificate/${course.slug}`);
   };
@@ -64,21 +69,7 @@ const Lesson = () => {
             <ArrowLeft className="h-3.5 w-3.5" /> Kembali ke halaman kursus
           </Link>
 
-          <div className="mt-4 overflow-hidden rounded-2xl bg-foreground">
-            <div className="relative grid aspect-video place-items-center">
-              <img
-                src={course.cover}
-                alt=""
-                aria-hidden
-                className="absolute inset-0 h-full w-full object-cover opacity-35"
-              />
-              <div className="relative text-center text-background">
-                <PlayCircle className="mx-auto h-16 w-16 opacity-90" />
-                <p className="mt-3 text-sm font-medium">{lesson.title}</p>
-                <p className="text-xs opacity-70">{lesson.duration}</p>
-              </div>
-            </div>
-          </div>
+          <div className="mt-4"><LessonVideo key={lesson.id} lesson={lesson}/></div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1">
@@ -94,7 +85,7 @@ const Lesson = () => {
             <Button
               variant={isDone ? "outline" : "default"}
               className="rounded-full"
-              onClick={() => toggleLesson(course.slug, lesson.id, lesson.minutes)}
+              onClick={() => toggleLesson(course.slug, lesson.id)}
             >
               <Check className="mr-2 h-4 w-4" />
               {isDone ? "Selesai" : "Tandai Selesai"}
@@ -105,10 +96,10 @@ const Lesson = () => {
             <Tabs defaultValue="materi">
               <TabsList className="rounded-full bg-muted p-1">
                 <TabsTrigger value="materi" className="rounded-full text-xs sm:text-sm">Materi</TabsTrigger>
-                <TabsTrigger value="transkrip" className="rounded-full text-xs sm:text-sm">Transkrip</TabsTrigger>
+                <TabsTrigger value="transkrip" className="rounded-full text-xs sm:text-sm">Sumber video</TabsTrigger>
                 <TabsTrigger value="catatan" className="rounded-full text-xs sm:text-sm">Catatan</TabsTrigger>
                 {lesson.hasQuiz && (
-                  <TabsTrigger value="kuis" className="rounded-full text-xs sm:text-sm">Kuis</TabsTrigger>
+                  <TabsTrigger value="kuis" className="rounded-full text-xs sm:text-sm">Kuis mini</TabsTrigger>
                 )}
               </TabsList>
 
@@ -164,15 +155,15 @@ const Lesson = () => {
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{lesson.reflection}</p>
                 </section>
 
-                <Button variant="outline" className="rounded-full">
-                  <Download className="mr-2 h-4 w-4" /> Unduh ringkasan (PDF)
-                </Button>
+                <Button variant="outline" className="rounded-full" onClick={() => {
+                  const text = [lesson.title, "Panduan dan latihan oleh Satu Langkah", lesson.overview, ...lesson.objectives, lesson.reflection, lesson.videoId ? `Sumber: https://www.youtube.com/watch?v=${lesson.videoId} — ${lesson.creator}` : "Brief proyek mandiri"].join("\n\n");
+                  const url=URL.createObjectURL(new Blob([text],{type:"text/plain;charset=utf-8"}));const link=document.createElement("a");link.href=url;link.download=`${lesson.id}-ringkasan.txt`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+                }}><Download className="mr-2 h-4 w-4"/>Unduh ringkasan & brief (.txt)</Button>
               </TabsContent>
 
               <TabsContent value="transkrip" className="mt-6 space-y-4">
-                {lesson.transcript.map((t) => (
-                  <p key={t} className="text-sm leading-[1.9] text-muted-foreground">{t}</p>
-                ))}
+                <p className="text-sm leading-relaxed text-muted-foreground">Ringkasan dan latihan pada halaman ini ditulis oleh Tim Satu Langkah; bukan transkrip verbatim video. Gunakan subtitle/transkrip yang disediakan kreator di YouTube bila tersedia.</p>
+                {lesson.videoId && <a className="inline-block text-sm font-semibold text-primary underline" href={`https://www.youtube.com/watch?v=${lesson.videoId}`} target="_blank" rel="noopener noreferrer">{lesson.videoTitle} — {lesson.creator}</a>}
               </TabsContent>
 
               <TabsContent value="catatan" className="mt-6">
@@ -182,13 +173,15 @@ const Lesson = () => {
                   placeholder="Tulis catatanmu tentang pelajaran ini…"
                   className="min-h-[220px] rounded-2xl text-sm leading-relaxed"
                 />
-                <p className="mt-2 text-xs text-muted-foreground">Catatan tersimpan otomatis di perangkat ini.</p>
+                <p className="mt-2 text-xs text-muted-foreground">Catatan disimpan otomatis ke akun setelah kamu berhenti mengetik. Periksa indikator penyimpanan di atas.</p>
               </TabsContent>
 
               {lesson.hasQuiz && (
                 <TabsContent value="kuis" className="mt-6">
-                  <Quiz
-                    questions={course.quiz}
+                  <p className="mb-4 text-sm text-muted-foreground">{sessionQuestions.length} pertanyaan tentang sesi ini. Baca penjelasan setelah menjawab. Kamu boleh mengulang; hasil percobaan terakhir disimpan ke akun.</p>
+                  <Quiz key={lesson.id}
+                    questions={sessionQuestions}
+                    previousResult={savedQuiz}
                     onFinish={(score, total) => saveQuiz(`${course.slug}:${lesson.id}`, score, total)}
                   />
                 </TabsContent>

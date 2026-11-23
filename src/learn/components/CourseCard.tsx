@@ -58,12 +58,8 @@ const CourseCard = ({ course, percent, wishlisted, onWishlist }: Props) => (
       <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{course.subtitle}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-          <span className="font-medium text-foreground">{course.rating}</span>({course.reviews})
-        </span>
-        <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{course.duration}</span>
-        <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />{course.students}</span>
+        <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5"/>{course.duration}</span>
+        <span>Video kurasi + praktik mandiri</span>
       </div>
 
       {typeof percent === "number" && percent > 0 && (

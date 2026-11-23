@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowRight,
@@ -26,7 +27,9 @@ const CourseDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const course = getCourse(slug);
-  const { state, toggleWishlist } = useProgress();
+  const { state, toggleWishlist, ready, enrollCourse } = useProgress();
+
+  const { user } = useAuth();
 
   if (!course) return <NotFound />;
 
@@ -56,15 +59,7 @@ const CourseDetail = () => {
             <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">{course.title}</h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">{course.description}</p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <Star className="h-4 w-4 fill-primary text-primary" />
-                <span className="font-semibold text-foreground">{course.rating}</span> ({course.reviews} ulasan)
-              </span>
-              <span className="inline-flex items-center gap-1.5"><Users className="h-4 w-4" />{course.students} pelajar</span>
-              <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" />{course.duration}</span>
-              <span className="inline-flex items-center gap-1.5"><BookOpen className="h-4 w-4" />{total} pelajaran</span>
-            </div>
+            <div className="mt-6 flex flex-wrap gap-5 text-sm text-muted-foreground"><span>{course.level} · Belajar mandiri</span><span>{course.duration}</span><span>{total} pelajaran</span></div>
 
             <div className="mt-6 flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
@@ -104,9 +99,10 @@ const CourseDetail = () => {
                 <Button
                   className="mt-5 w-full rounded-full"
                   size="lg"
-                  onClick={() => navigate(`/learn/course/${course.slug}/lesson/${nextLesson.id}`)}
+                  disabled={!!user && !ready}
+                  onClick={() => { if (!user) { navigate(`/learn/auth?next=${encodeURIComponent(`/learn/course/${course.slug}`)}`); return; } enrollCourse(course.slug); navigate(`/learn/course/${course.slug}/lesson/${nextLesson.id}`); }}
                 >
-                  {percent > 0 ? "Lanjutkan Belajar" : "Daftar Sekarang"}
+                  {!user ? "Masuk & ikuti gratis" : !ready ? "Memuat akun…" : state.enrolled.includes(course.slug) ? "Lanjutkan Belajar" : "Ikuti kelas gratis"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button
@@ -126,13 +122,13 @@ const CourseDetail = () => {
                     </li>
                   ))}
                   <li className="flex items-start gap-2.5">
-                    <InfinityIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> Akses selamanya
+                    <InfinityIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> Akses materi selama kelas tersedia
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Download className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> Materi bisa diunduh
+                    <Download className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> Ringkasan & brief dalam format teks
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Award className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> Sertifikat penyelesaian
+                    <Award className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> Ringkasan penyelesaian mandiri
                   </li>
                 </ul>
               </div>
@@ -146,7 +142,7 @@ const CourseDetail = () => {
         <div>
           <h2 className="text-2xl font-bold">Apa yang akan kamu pelajari</h2>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-            {lessons[0].objectives.map((o) => (
+            {[...new Set(lessons.flatMap(l => l.objectives))].filter((_, i) => i % 3 === 0).map((o) => (
               <li key={o} className="flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 {o}
@@ -162,29 +158,28 @@ const CourseDetail = () => {
             <Curriculum
               course={course}
               completed={completed}
-              onSelect={(id) => navigate(`/learn/course/${course.slug}/lesson/${id}`)}
+              onSelect={(id) => { if (!user) { navigate(`/learn/auth?next=${encodeURIComponent(`/learn/course/${course.slug}`)}`); return; } if (!ready) return; enrollCourse(course.slug); navigate(`/learn/course/${course.slug}/lesson/${id}`); }}
             />
           </div>
         </div>
 
         <aside className="space-y-6">
           <div className="learn-card p-6">
-            <h3 className="text-sm font-semibold">Tentang instruktur</h3>
+            <h3 className="text-sm font-semibold">Tentang kurasi & sumber</h3>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              {course.instructor} adalah tim kurator Satu Langkah Books yang menyusun bacaan, kelas, dan
-              materi reflektif seputar literasi dan tradisi keilmuan Islam.
+              Kurikulum, panduan, kuis, dan latihan disusun Tim Satu Langkah. Video berasal dari kanal LearnFree dan Gareth David Studio, diputar melalui YouTube dengan atribusi. Kelas ini bukan afiliasi resmi dengan kreator dan belum menyediakan review mentor.
             </p>
           </div>
           <div className="learn-card p-6">
             <h3 className="text-sm font-semibold">Estimasi waktu</h3>
             <p className="mt-3 text-sm text-muted-foreground">{course.readingTime}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{course.duration} materi video</p>
+            <p className="mt-1 text-sm text-muted-foreground">{course.duration}</p>
           </div>
         </aside>
       </section>
 
       {/* Related */}
-      <section className="learn-soft-bg py-16">
+      {related.length > 0 && <section className="learn-soft-bg py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold">Kursus lain yang mungkin cocok</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -193,7 +188,7 @@ const CourseDetail = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
     </LearnLayout>
   );
 };

@@ -14,7 +14,7 @@ const LearnFooter = () => (
           </span>
         </div>
         <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-          Ruang belajar tenang untuk membaca, berpikir, dan menulis lebih baik. Satu langkah setiap hari.
+          Ruang belajar untuk memahami prinsip, mengasah keterampilan, dan menghasilkan karya. Satu langkah setiap hari.
         </p>
       </div>
 
@@ -23,7 +23,7 @@ const LearnFooter = () => (
         <ul className="mt-4 space-y-2.5 text-sm text-muted-foreground">
           <li><Link className="transition-colors hover:text-primary" to="/learn/courses">Semua Kursus</Link></li>
           <li><Link className="transition-colors hover:text-primary" to="/learn/dashboard">Dashboard</Link></li>
-          <li><Link className="transition-colors hover:text-primary" to="/learn/dashboard/certificates">Sertifikat</Link></li>
+          <li><Link className="transition-colors hover:text-primary" to="/learn/dashboard/certificates">Penyelesaian</Link></li>
         </ul>
       </div>
 
